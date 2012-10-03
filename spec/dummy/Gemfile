@@ -1,0 +1,15 @@
+source 'https://rubygems.org'
+
+gem 'rails', '3.2.3'
+PROJECTS='/Users/kbrock/projects'
+gem 'activerecord-jdbc-adapter', path: "#{PROJECTS}/activerecord-jdbc-adapter"
+gem 'activerecord-jdbcpostgresql-adapter', path: "#{PROJECTS}/activerecord-jdbc-adapter/activerecord-jdbcpostgresql-adapter/"
+# gem 'activerecord-jdbc-adapter', git: 'git://github.com/kbrock/activerecord-jdbc-adapter.git', branch: 'ping4-collective'
+# git "git://github.com/kbrock/activerecord-jdbc-adapter.git", branch: 'ping4-collective' do
+#   gem "activerecord-jdbcpostgresql-adapter"
+# end
+gem 'postgres_ext', path: "#{PROJECTS}/postgres_ext"
+gem 'rspec-rails', '~> 2.9.0'
+
+# Specify your gem's dependencies in postgres_ext.gemspec
+gem 'postgres_gis', path: '../..'

@@ -1,0 +1,14 @@
+test:
+  adapter: postgresql
+  database: postgres_gis_test
+  username: postgres
+  encoding: utf8
+  min_messages: warning
+  template: template_postgis
+  schema_search_path: "'$user','public'"
+development:
+  adapter: postgresql
+  database: postgres_gis_dev
+  username: postgres
+  encoding: utf8
+  min_messages: warning

@@ -1,0 +1,2 @@
+require 'postgres_gis/active_record/connection_adapters/postgres_adapter'
+require 'postgres_gis/active_record/schema_dumper'
