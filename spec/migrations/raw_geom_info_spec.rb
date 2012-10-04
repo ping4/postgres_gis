@@ -23,6 +23,12 @@ describe PostgresGis::RawGeomInfo do
       with_z: false,
       srid: 0
     },
+    'geography(point)' => {
+      geographic: true,
+      with_m: false,
+      with_z: false,
+      srid: 0
+    },
     'geography(point,4326)' => {
       geographic: true,
       with_m: false,

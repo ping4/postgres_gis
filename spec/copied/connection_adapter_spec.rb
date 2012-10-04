@@ -2,7 +2,6 @@ require 'spec_helper'
 
 describe "Modified PostgreSQLAdapter" do
   before :each do
-    postgis_connection
     @connection = ActiveRecord::Base.connection
   end
 
@@ -161,9 +160,9 @@ describe "Modified PostgreSQLAdapter" do
       #   GeographyGeometryCollectionModel.columns.select{|c| c.name == 'geom'}.first.geometry_type.should == :geometry_collection
       # end
 
-      it "should be :geometry for geography columns not restricted to a type" do
-        GeographyModel.columns.select{|c| c.name == 'geom'}.first.geometry_type.should == :geometry
-      end
+      # it "should be :geometry for geography columns not restricted to a type" do
+      #   GeographyModel.columns.select{|c| c.name == 'geom'}.first.geometry_type.should == :geometry
+      # end
     end
   end
 

@@ -2,7 +2,6 @@ require 'spec_helper'
 
 describe "Spatially-enabled Schema Dumps" do
   before :all do
-    postgis_connection
     @connection = ActiveRecord::Base.connection
 
     # Create a new table

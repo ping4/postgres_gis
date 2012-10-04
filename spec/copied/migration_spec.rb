@@ -11,7 +11,6 @@ end
 
 describe "Spatially-enabled Migrations" do
   before :each do
-    #postgis_connection
     @connection = ActiveRecord::Base.connection
     ActiveRecord::Migration.verbose = false
   end

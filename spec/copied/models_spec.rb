@@ -2,7 +2,6 @@ require 'spec_helper'
 
 describe "Spatially-enabled Models" do
   before :each do
-    postgis_connection
     @connection = ActiveRecord::Base.connection
   end
 
@@ -157,11 +156,11 @@ describe "Spatially-enabled Models" do
     #   model.save.should == true
     # end
 
-    it 'should save Geography objects' do
-      model = GeographyModel.new(:extra => 'test', :geom => GeometryFactory.point)
-      @connection.should_receive(:select_value).with(Regexp.new(GeometryFactory.point.as_hex_ewkb))
-      model.save.should == true
-    end
+    # it 'should save Geography objects' do
+    #   model = GeographyModel.new(:extra => 'test', :geom => GeometryFactory.point)
+    #   @connection.should_receive(:select_value).with(Regexp.new(GeometryFactory.point.as_hex_ewkb))
+    #   model.save.should == true
+    # end
 
     it 'should save 3D Point (with Z coord) geography objects' do
       model = GeographyPointzModel.new(:extra => 'test', :geom => GeometryFactory.pointz)
@@ -233,10 +232,10 @@ describe "Spatially-enabled Models" do
     #   GeographyGeometryCollectionModel.find(model.id).geom.should == GeometryFactory.geometry_collection
     # end
 
-    it 'should retrieve Geometry geography objects' do
-      model = GeographyModel.create(:extra => 'test', :geom => GeometryFactory.point)
-      GeographyModel.find(model.id).geom.should == GeometryFactory.point
-    end
+    # it 'should retrieve Geometry geography objects' do
+    #   model = GeographyModel.create(:extra => 'test', :geom => GeometryFactory.point)
+    #   GeographyModel.find(model.id).geom.should == GeometryFactory.point
+    # end
 
     it 'should retrieve 3D Point (with Z coord) geography objects' do
       model = GeographyPointzModel.create(:extra => 'test', :geom => GeometryFactory.pointz)

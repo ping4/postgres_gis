@@ -202,13 +202,10 @@ module ActiveRecord
       def type_cast_with_gis(*args)
         value, column, _ = args
         if value.nil?
-          if column.spatial?
-            value
-          else
-            type_cast_without_gis(*args)
-          end
+          column.spatial? ? value : type_cast_without_gis(*args)
         elsif value.kind_of?(GeoRuby::SimpleFeatures::Geometry)
-          geometry_to_string(value)
+          #geometry_to_string(value)
+          value.as_hex_ewkb
         else
           type_cast_without_gis(*args)
         end
@@ -217,7 +214,8 @@ module ActiveRecord
 
       def quote_with_gis(value, column = nil)
         if value.kind_of?(GeoRuby::SimpleFeatures::Geometry)
-          "'#{type_cast(value, column)}'"
+          #"'#{type_cast(value, column)}'"
+          "'#{value.as_hex_ewkb}'"
         else
           quote_without_gis(value,column)
         end
@@ -312,9 +310,6 @@ module ActiveRecord
         raw_geom_infos
       end
 
-      def geometry_to_string(value)
-        value.as_hex_ewkb
-      end
     end
   end
 end

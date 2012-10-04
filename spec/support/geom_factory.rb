@@ -2,7 +2,7 @@ require 'geo_ruby'
 class GeometryFactory
   class << self
     def point
-      GeoRuby::Point.from_x_y(1, 2, 4326)
+      GeoRuby::SimpleFeatures::Point.from_x_y(1, 2, 4326)
     end
 
     # def line_string
@@ -10,7 +10,7 @@ class GeometryFactory
     # end
 
     def polygon
-      GeoRuby::Polygon.from_coordinates([[[12.4,-45.3],[45.4,41.6],[4.456,1.0698],[12.4,-45.3]],[[2.4,5.3],[5.4,1.4263],[14.46,1.06],[2.4,5.3]]], 4326)
+      GeoRuby::SimpleFeatures::Polygon.from_coordinates([[[12.4,-45.3],[45.4,41.6],[4.456,1.0698],[12.4,-45.3]],[[2.4,5.3],[5.4,1.4263],[14.46,1.06],[2.4,5.3]]], 4326)
     end
 
     # def multi_point
@@ -30,15 +30,15 @@ class GeometryFactory
     # end
 
     def pointz
-      GeoRuby::Point.from_x_y_z(1, 2, 3, 4326)
+      GeoRuby::SimpleFeatures::Point.from_x_y_z(1, 2, 3, 4326)
     end
 
     def pointm
-      GeoRuby::Point.from_x_y_m(1, 2, 3, 4326)
+      GeoRuby::SimpleFeatures::Point.from_x_y_m(1, 2, 3, 4326)
     end
 
     def point4
-      GeoRuby::Point.from_x_y_z_m(1, 2, 3, 4, 4326)
+      GeoRuby::SimpleFeatures::Point.from_x_y_z_m(1, 2, 3, 4, 4326)
     end
   end
 end

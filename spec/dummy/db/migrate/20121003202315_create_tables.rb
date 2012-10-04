@@ -1,13 +1,13 @@
 class CreateTables < ActiveRecord::Migration
   def up
-    create_basic_model
-    create_geom_model if ActiveRecord::Base.connection.supports_geographic?
+    create_geometry_model
+    create_geography_model if ActiveRecord::Base.connection.supports_geographic?
   end
 
   def down
   end
 
-  def create_basic_model
+  def create_geometry_model
     create_table :point_models do |t|
       t.string :extra
       t.string :more_extra
@@ -68,7 +68,7 @@ class CreateTables < ActiveRecord::Migration
     end
   end
 
-  def create_geom_model
+  def create_geography_model
     create_table :geography_point_models do |t|
       t.string :extra
       t.point :geom, :geographic => true
@@ -106,6 +106,7 @@ class CreateTables < ActiveRecord::Migration
     #   t.geometry_collection :geom, :geographic => true
     # end
 
+    #will want to produce geography / geometry
     # create_table :geography_models do |t|
     #   t.string :extra
     #   t.geography :geom, :geographic => true
