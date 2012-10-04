@@ -25,6 +25,7 @@ describe 'point migrations' do
     #pp point_1.to_json
     [point_1, point_5].each do |geom_column|
       geom_column.sql_type.should match /point/i
+      geom_column.sql_type.should match /geometry/i
       geom_column.geometry_type.should == :point
       geom_column.type.should == :string
       #geom_column.with_z.should == true

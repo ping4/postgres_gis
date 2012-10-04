@@ -4,6 +4,7 @@ test:
   username: postgres
   encoding: utf8
   min_messages: warning
+  client_min_messages: warning
   template: template_postgis
   schema_search_path: "'$user','public'"
 development:

@@ -4,6 +4,7 @@ require 'postgres_ext'
 
 module ActiveRecord
   module ConnectionAdapters
+    DEFAULT_SRID=0
     class PostgreSQLColumn
       attr_reader  :geometry_type, :srid, :with_z, :with_m
 
@@ -15,11 +16,12 @@ module ActiveRecord
       alias_method_chain :initialize, :gis
 
       # was initialize
-      def set_gis(srid = -1, with_z = false, with_m = false, geographic = false)
-        @srid = srid || -1
+      def set_gis(srid = DEFAULT_SRID, with_z = false, with_m = false, geographic = false)
+        @srid = srid || DEFAULT_SRID
         @with_z = with_z || false
         @with_m = with_m || false
         @geographic = geographic || false
+        self
       end
 
       def spatial?
@@ -29,6 +31,11 @@ module ActiveRecord
       def geographic?
         !!@geographic
       end
+
+      def klass_with_gis
+        spatial? ? GeoRuby::SimpleFeatures::Geometry : klass_without_gis
+      end
+      alias_method_chain :klass, :gis
 
       def type_cast_with_gis(*args)
         spatial? ? self.class.string_to_geometry(args.first) : type_cast_without_gis(*args)
@@ -40,23 +47,15 @@ module ActiveRecord
       end
       alias_method_chain :type_cast_code, :gis
 
-      def klass_with_gis
-        spatial? ? GeoRuby::SimpleFeatures::Geometry : klass_without_gis
-      end
-      alias_method_chain :klass, :gis
-
       #Transforms a string to a geometry. PostGIS returns a HewEWKB string.
       def self.string_to_geometry(string)
-        return string if string.nil? || ! string.is_a?(String)
+        return string unless string.is_a?(String)
         GeoRuby::SimpleFeatures::Geometry.from_hex_ewkb(string) rescue nil
       end
 
       private
 
-      # Maps additional data types to base Rails/Arel types
-      #
-      # For Rails 3, only the types defined by Arel can be used.  We'll
-      # use :string since the database returns the columns as hex strings.
+
       def simplified_type_with_gis(field_type)
         case field_type
         when /geography|geometry|linestring|multipoint|multilinestring|multipolygon|geometrycollection/i then :string
@@ -68,22 +67,9 @@ module ActiveRecord
       # # less simplified geometric type to be use in migrations
       def geometry_simplified_type(field_type)
         case field_type
-        when /^point$/i then :point
-        when /^linestring$/i then :line_string
-        when /^polygon$/i then :polygon
-        when /^geometry$/i then :geometry
-        when /multipoint/i then :multi_point
-        when /multilinestring/i then :multi_line_string
-        when /multipolygon/i then :multi_polygon
-        when /geometrycollection/i then :geometry_collection
-        #postgis geography
-        when /geography\(point/i then :point
-        when /geography\(linestring/i then :line_string
-        when /geography\(polygon/i then :polygon
-        when /geography\(multipoint/i then :multi_point
-        when /geography\(multilinestring/i then :multi_line_string
-        when /geography\(multipolygon/i then :multi_polygon
-        when /geography\(geometrycollection/i then :geometry_collection
+        when /point/i then :point
+        when /polygon/i then :polygon
+        when /geometry/i then :geometry
         when /geography/i then :geometry
         end
       end
@@ -93,37 +79,38 @@ module ActiveRecord
       GIS_TYPES = 
       {
         :point => { :name => "POINT" },
-        :line_string => { :name => "LINESTRING" },
         :polygon => { :name => "POLYGON" },
-        :geometry_collection => { :name => "GEOMETRYCOLLECTION" },
-        :multi_point => { :name => "MULTIPOINT" },
-        :multi_line_string => { :name => "MULTILINESTRING" },
-        :multi_polygon => { :name => "MULTIPOLYGON" },
         :geometry => { :name => "GEOMETRY"}
       }
+      def self.geometry_data_types
+        GIS_TYPES
+      end
       #already defined by postgres_ext
       class ColumnDefinition
         attr_accessor :table_name, :srid, :with_z, :with_m, :geographic
         attr_reader :spatial
 
+        def spatial?
+          spatial
+        end
         #TODO: was initialize
-        def set_gis(srid=-1, with_z=false, with_m=false, geographic=false)
+        def set_gis(srid=DEFAULT_SRID, with_z=false, with_m=false, geographic=false)
           @table_name = nil
           @spatial = true
-          @srid = srid || -1
+          @srid = srid || DEFAULT_SRID
           @with_z = with_z || false
           @with_m = with_m || false
           @geographic = geographic || false
         end
 
         def sql_type_with_gis
-          if geographic
+          if spatial?
             type_sql = GIS_TYPES[type.to_sym][:name]
             type_sql += "Z" if with_z
             type_sql += "M" if with_m
             # SRID is not yet supported (defaults to 4326)
-            #type_sql += ", #{srid}" if (srid && srid != -1)
-            type_sql = "geography(#{type_sql})"
+            type_sql += ", #{srid}" if (srid && srid != DEFAULT_SRID)
+            type_sql = "#{geographic ? 'geography' : 'geometry'}(#{type_sql})" unless ['geography', 'geometry'].include? type.to_sym
             type_sql
           else
             sql_type_without_gis
@@ -133,11 +120,6 @@ module ActiveRecord
       end
 
       class TableDefinition
-        #TODO: remove
-        def geom_columns
-          raise "remote geom_columns (KB)"
-        end
-
         GIS_TYPES.keys.map(&:to_s).each do |column_type|
           class_eval <<-EOV, __FILE__, __LINE__ + 1
             def #{column_type}(*args)                                   # def string(*args)
@@ -156,7 +138,6 @@ module ActiveRecord
             column = self[name] #NOTE: #ColumnDefinition
             column.set_gis(options[:srid], options[:with_z], options[:with_m], options[:geographic])
             #TODO: geographic - does that change the type?
-            @columns << column unless @columns.include? column
           end
           self
         end
@@ -216,9 +197,18 @@ module ActiveRecord
         postgis_major_version > 1 || (postgis_major_version == 1 && postgis_minor_version >= 5)
       end
 
+      #typically value, column
+      #postgres_ext has value, column, part_array = false
       def type_cast_with_gis(*args)
-        if args.first.kind_of?(GeoRuby::SimpleFeatures::Geometry)
-          args.first.as_hex_ewkb
+        value, column, _ = args
+        if value.nil?
+          if column.spatial?
+            value
+          else
+            type_cast_without_gis(*args)
+          end
+        elsif value.kind_of?(GeoRuby::SimpleFeatures::Geometry)
+          geometry_to_string(value)
         else
           type_cast_without_gis(*args)
         end
@@ -227,7 +217,7 @@ module ActiveRecord
 
       def quote_with_gis(value, column = nil)
         if value.kind_of?(GeoRuby::SimpleFeatures::Geometry)
-          "'#{value.as_hex_ewkb}'"
+          "'#{type_cast(value, column)}'"
         else
           quote_without_gis(value,column)
         end
@@ -242,25 +232,24 @@ module ActiveRecord
         cdef = column_definitions(table_name)
         cdef = cdef.collect(&:values) if cdef.size > 0 && cdef.first.is_a?(Hash)
         cdef.collect do |name, type, default, notnull|
-        #column_definitions(table_name).collect do |name, type, default, notnull|
           col = ActiveRecord::ConnectionAdapters::PostgreSQLColumn.new(name, default, type, notnull == "f")
           case type
           when /geography/i
             raw_geom_info = PostgresGis::RawGeomInfo.from_sql_type(type)
             col.set_gis(raw_geom_info.srid, raw_geom_info.with_z, raw_geom_info.with_m, raw_geom_info.geographic)
           when /geometry/i
-            raw_geom_info = raw_geom_infos[name] || PostgresGis::RawGeomInfo.not_found("geometry", false)
+            raw_geom_info = PostgresGis::RawGeomInfo.from_sql_type(type)
             if raw_geom_info.found?
               #new(name, default, raw_geom_info.type, notnull == "f",
                 #raw_geom_info.srid, raw_geom_info.with_z, raw_geom_info.with_m)
-              col.set_gis(raw_geom_info.srid, raw_geom_info.with_z, raw_geom_info.with_m)
+              col.set_gis(raw_geom_info.srid, raw_geom_info.with_z, raw_geom_info.with_m, raw_geom_info.geographic)
             else
               #create_simplified(name, default, notnull == "f")
-              col.sql_type = raw_geom_info.type
-              col.set_gis(raw_geom_info.srid, raw_geom_info.with_z, raw_geom_info.with_m)
+              col.set_gis(raw_geom_info.srid, raw_geom_info.with_z, raw_geom_info.with_m, raw_geom_info.geographic)
             end
-            @sql_type = raw_geom_info.type
-            #col.set_gis(raw_geom_info.srid, raw_geom_info.with_z, raw_geom_info.with_m, true)
+          when /^(?:point|line|lseg|box|"?path"?|polygon|circle)$/i
+            raw_geom_info = PostgresGis::RawGeomInfo.from_sql_type(type) #keep the type as col.type
+            col.set_gis(raw_geom_info.srid, raw_geom_info.with_z, raw_geom_info.with_m, raw_geom_info.geographic)
           end
           col
         end
@@ -297,17 +286,17 @@ module ActiveRecord
         # PostGIS shapes are not used there
         # in that case, just return the empty object
         geometry_columns = select_value("select count(*) from information_schema.tables where table_name = 'geometry_columns'").to_i
-        puts "column_spatial_info short circuit" and return {} if geometry_columns == 0
+        return {} if geometry_columns == 0
         constr = select_rows("SELECT * FROM geometry_columns WHERE f_table_name = '#{table_name}'")
 
         raw_geom_infos = {}
-        constr.each do |constr_def_a|
-          info = raw_geom_infos[constr_def_a[3]] ||= PostgresGis::RawGeomInfo.new
-          info.type = constr_def_a[6]
-          info.dimension = constr_def_a[4].to_i
-          info.srid = constr_def_a[5].to_i
+        constr.each do |geo_col|
+          info = raw_geom_infos[geo_col[3]] ||= PostgresGis::RawGeomInfo.new
+          info.type = geo_col[6]
+          info.srid = geo_col[5].to_i # default SRDI of 0
+          info.dimension = geo_col[4].to_i
 
-          if info.type[-1] == ?M
+          if info.type[6] == ?M #last column is #6. is this looking for the letter M in there?
             info.with_m = true
             info.type.chop!
           else
@@ -322,6 +311,10 @@ module ActiveRecord
 
         raw_geom_infos
       end
+
+      def geometry_to_string(value)
+        value.as_hex_ewkb
+      end
     end
   end
 end
@@ -331,7 +324,7 @@ module PostgresGis
     def convert!
       self.type ||= "geometry"
       self.geographic ||= false
-      self.srid = -1 if self.srid.to_i == 0
+      self.srid ||= self.srid.to_i #ActiveRecord::ConnectionAdapters::DEFAULT_SRID
 
       if dimension == 4
         self.with_m = true
@@ -356,16 +349,14 @@ module PostgresGis
     end
 
     def self.not_found(sql_type, geographic=false)
-      new(sql_type, -1, nil, false, false, geographic, false)
+      new(sql_type, ActiveRecord::ConnectionAdapters::DEFAULT_SRID, nil, false, false, geographic, false)
     end
 
     def self.from_sql_type(sql_type)
-      if sql_type =~ /geography(?:\((?:\w+?)(Z)?(M)?(?:,(\d+))?\))?/i
-        new(sql_type, $3.to_i, nil, $1 == 'Z', $2 == 'M', true).tap { |info|
-          info.dimension = (2 + (info.with_z ? 1 : 0) + (info.with_m ? 1 : 0))
-        }
+      if sql_type =~ /(geography|geometry)?(?:\((?:\w+?)(Z)?(M)?(?:,(\d+))?\))?/i
+        new(sql_type, $4.to_i, nil, !!$2, !!$3, $1 == 'geography')
       else
-        not_found(sql_type, true)
+        not_found(sql_type, sql_type.include?('geography'))
       end
     end
   end
