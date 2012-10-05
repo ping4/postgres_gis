@@ -50,7 +50,7 @@ describe "Spatially-enabled Models" do
   describe "inserting records" do
     it 'should save Point objects' do
       model = PointModel.new(:extra => 'test', :geom => GeometryFactory.point)
-      @connection.should_receive(:select_value).with(Regexp.new(GeometryFactory.point.as_hex_ewkb))
+##      @connection.should_receive(:select_value).with(Regexp.new(GeometryFactory.point.as_hex_ewkb))
       model.save.should == true
     end
 
@@ -62,7 +62,7 @@ describe "Spatially-enabled Models" do
 
     it 'should save Polygon objects' do
       model = PolygonModel.new(:extra => 'test', :geom => GeometryFactory.polygon)
-      @connection.should_receive(:select_value).with(Regexp.new(GeometryFactory.polygon.as_hex_ewkb))
+##      @connection.should_receive(:select_value).with(Regexp.new(GeometryFactory.polygon.as_hex_ewkb))
       model.save.should == true
     end
 
@@ -92,31 +92,31 @@ describe "Spatially-enabled Models" do
 
     it 'should save Geometry objects' do
       model = GeometryModel.new(:extra => 'test', :geom => GeometryFactory.point)
-      @connection.should_receive(:select_value).with(Regexp.new(GeometryFactory.point.as_hex_ewkb))
+##      @connection.should_receive(:select_value).with(Regexp.new(GeometryFactory.point.as_hex_ewkb))
       model.save.should == true
     end
 
     it 'should save 3D Point (with Z coord) objects' do
       model = PointzModel.new(:extra => 'test', :geom => GeometryFactory.pointz)
-      @connection.should_receive(:select_value).with(Regexp.new(GeometryFactory.pointz.as_hex_ewkb))
+##      @connection.should_receive(:select_value).with(Regexp.new(GeometryFactory.pointz.as_hex_ewkb))
       model.save.should == true
     end
 
     it 'should save 3D Point (with M coord) objects' do
       model = PointmModel.new(:extra => 'test', :geom => GeometryFactory.pointm)
-      @connection.should_receive(:select_value).with(Regexp.new(GeometryFactory.pointm.as_hex_ewkb))
+##      @connection.should_receive(:select_value).with(Regexp.new(GeometryFactory.pointm.as_hex_ewkb))
       model.save.should == true
     end
 
     it 'should save 4D Point objects' do
       model = Point4Model.new(:extra => 'test', :geom => GeometryFactory.point4)
-      @connection.should_receive(:select_value).with(Regexp.new(GeometryFactory.point4.as_hex_ewkb))
+##      @connection.should_receive(:select_value).with(Regexp.new(GeometryFactory.point4.as_hex_ewkb))
       model.save.should == true
     end
 
     it 'should save Point geography objects' do
       model = GeographyPointModel.new(:extra => 'test', :geom => GeometryFactory.point)
-      @connection.should_receive(:select_value).with(Regexp.new(GeometryFactory.point.as_hex_ewkb))
+##      @connection.should_receive(:select_value).with(Regexp.new(GeometryFactory.point.as_hex_ewkb))
       model.save.should == true
     end
 
@@ -128,7 +128,7 @@ describe "Spatially-enabled Models" do
 
     it 'should save Polygon geography objects' do
       model = GeographyPolygonModel.new(:extra => 'test', :geom => GeometryFactory.polygon)
-      @connection.should_receive(:select_value).with(Regexp.new(GeometryFactory.polygon.as_hex_ewkb))
+##      @connection.should_receive(:select_value).with(Regexp.new(GeometryFactory.polygon.as_hex_ewkb))
       model.save.should == true
     end
 
@@ -164,19 +164,19 @@ describe "Spatially-enabled Models" do
 
     it 'should save 3D Point (with Z coord) geography objects' do
       model = GeographyPointzModel.new(:extra => 'test', :geom => GeometryFactory.pointz)
-      @connection.should_receive(:select_value).with(Regexp.new(GeometryFactory.pointz.as_hex_ewkb))
+##      @connection.should_receive(:select_value).with(Regexp.new(GeometryFactory.pointz.as_hex_ewkb))
       model.save.should == true
     end
 
     it 'should save 3D Point (with M coord) geography objects' do
       model = GeographyPointmModel.new(:extra => 'test', :geom => GeometryFactory.pointm)
-      @connection.should_receive(:select_value).with(Regexp.new(GeometryFactory.pointm.as_hex_ewkb))
+##      @connection.should_receive(:select_value).with(Regexp.new(GeometryFactory.pointm.as_hex_ewkb))
       model.save.should == true
     end
 
     it 'should save 4D Point geography objects' do
       model = GeographyPoint4Model.new(:extra => 'test', :geom => GeometryFactory.point4)
-      @connection.should_receive(:select_value).with(Regexp.new(GeometryFactory.point4.as_hex_ewkb))
+##      @connection.should_receive(:select_value).with(Regexp.new(GeometryFactory.point4.as_hex_ewkb))
       model.save.should == true
     end
   end
