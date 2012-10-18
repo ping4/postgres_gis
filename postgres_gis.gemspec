@@ -12,7 +12,7 @@ Gem::Specification.new do |gem|
   gem.authors       = ["Keenan Brock"]
   gem.email         = ["keenan.brock@thebrocks.net"]
   gem.description   = %q{Adds PostgreSQL GIS support to ActiveRecord.
-Works with GeoRuby adapter, jruby, mri 1.9.3 (pg database adapter) and postgres_ext}
+Works with georuby adapter, jruby, mri 1.9.3 (pg database adapter) and postgres_ext}
   gem.summary       = %q{Postgres GIS (aka postgis) GeoRuby ActiveRecord Support}
   gem.homepage      = ""
 
@@ -22,8 +22,7 @@ Works with GeoRuby adapter, jruby, mri 1.9.3 (pg database adapter) and postgres_
   gem.require_paths = ["lib"]
 
   gem.add_dependency 'activerecord', '~> 3.2.0'
-  #TODO: change to 'georuby'
-  gem.add_dependency 'GeoRuby', '>= 1.3.0'
+  gem.add_dependency 'georuby', '>= 1.3.0'
   gem.add_dependency 'postgres_ext' #, '~> 0.0.9'
 
   gem.add_development_dependency 'rails', '~> 3.2.0'
