@@ -2,14 +2,6 @@ require 'spec_helper'
 
 describe PostgresGis::RawGeomInfo do
 
-  it 'not found is not found' do
-    PostgresGis::RawGeomInfo.not_found(nil).should_not be_found
-  end
-
-  it 'with unknown sql type should not be found' do
-    PostgresGis::RawGeomInfo.not_found(nil).should_not be_found
-  end
-
   {
     'point' => {
       geographic: false,

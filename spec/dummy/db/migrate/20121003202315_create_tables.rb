@@ -1,10 +1,21 @@
 class CreateTables < ActiveRecord::Migration
   def up
+    install_extensions
     create_geometry_model
     create_geography_model if ActiveRecord::Base.connection.supports_geographic?
   end
 
   def down
+  end
+
+  def install_extensions
+    execute %{
+      CREATE EXTENSION postgis;
+      CREATE EXTENSION postgis_topology;
+      GRANT ALL ON geometry_columns TO PUBLIC;
+      GRANT ALL ON spatial_ref_sys TO PUBLIC;
+      GRANT ALL ON geography_columns TO PUBLIC;
+    }
   end
 
   def create_geometry_model

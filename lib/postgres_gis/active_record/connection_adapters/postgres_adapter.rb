@@ -67,10 +67,15 @@ module ActiveRecord
       # # less simplified geometric type to be use in migrations
       def geometry_simplified_type(field_type)
         case field_type
+        when /linestring/i then :linestring
+        when /multipoint/i then :multipoint
+        when /multilinestring/i then :multilinestring
+        when /multipolygon/i then :multipolygon
+        when /geometrycollection/i then :geometry
         when /point/i then :point
         when /polygon/i then :polygon
         when /geometry/i then :geometry
-        when /geography/i then :geometry
+        when /geography/i then :geography
         end
       end
     end
@@ -80,7 +85,9 @@ module ActiveRecord
       {
         :point => { :name => "POINT" },
         :polygon => { :name => "POLYGON" },
-        :geometry => { :name => "GEOMETRY"}
+        :multipolygon => { :name => "MULTIPOLYGON" },
+        :geometry => { :name => "GEOMETRY"},
+        :geography => { :name => "GEOGRAPHY"}
       }
       def self.geometry_data_types
         GIS_TYPES
@@ -225,97 +232,21 @@ module ActiveRecord
       #overriding a simple active record method
       #TODO: need better way for this
       def columns(table_name, name = nil) #:nodoc:
-        raw_geom_infos = column_spatial_info(table_name)
-
         cdef = column_definitions(table_name)
         cdef = cdef.collect(&:values) if cdef.size > 0 && cdef.first.is_a?(Hash)
         cdef.collect do |name, type, default, notnull|
           col = ActiveRecord::ConnectionAdapters::PostgreSQLColumn.new(name, default, type, notnull == "f")
-          case type
-          when /geography/i
-            raw_geom_info = PostgresGis::RawGeomInfo.from_sql_type(type)
-            col.set_gis(raw_geom_info.srid, raw_geom_info.with_z, raw_geom_info.with_m, raw_geom_info.geographic)
-          when /geometry/i
-            raw_geom_info = PostgresGis::RawGeomInfo.from_sql_type(type)
-            if raw_geom_info.found?
-              #new(name, default, raw_geom_info.type, notnull == "f",
-                #raw_geom_info.srid, raw_geom_info.with_z, raw_geom_info.with_m)
-              col.set_gis(raw_geom_info.srid, raw_geom_info.with_z, raw_geom_info.with_m, raw_geom_info.geographic)
-            else
-              #create_simplified(name, default, notnull == "f")
-              col.set_gis(raw_geom_info.srid, raw_geom_info.with_z, raw_geom_info.with_m, raw_geom_info.geographic)
-            end
-          when /^(?:point|line|lseg|box|"?path"?|polygon|circle)$/i
-            raw_geom_info = PostgresGis::RawGeomInfo.from_sql_type(type) #keep the type as col.type
-            col.set_gis(raw_geom_info.srid, raw_geom_info.with_z, raw_geom_info.with_m, raw_geom_info.geographic)
-          end
+          raw_geom_info = PostgresGis::RawGeomInfo.from_sql_type(type)
+          col.set_gis(raw_geom_info.srid, raw_geom_info.with_z, raw_geom_info.with_m, raw_geom_info.geographic)
           col
         end
       end
-
-      #   #TODO: this is no longer necessary, remove and see if things are still created
-      #  def type_to_sql_with_gis(type, limit = nil, precision = nil, scale = nil)
-      #     if spatial && !geographic
-      #       type_sql = GIS_TYPES[type.to_sym][:name]
-      #       type_sql += "M" if with_m and !with_z
-      #       if with_m and with_z
-      #         dimension = 4
-      #       elsif with_m or with_z
-      #         dimension = 3
-      #       else
-      #         dimension = 2
-      #       end
-      #     else
-      #       to_sql_without_gis
-      #     end
-      #    type_to_sql_without_gis
-      #  end
-      #  alias_method_chain :type_to_sql, :gis
-
-      private
-
-      def tables_without_postgis
-        tables - %w{ geometry_columns spatial_ref_sys }
-      end
-
-      #TODO: revisit
-      def column_spatial_info(table_name)
-        # if this Postgres DB does not contain a geometry_columns table,
-        # PostGIS shapes are not used there
-        # in that case, just return the empty object
-        geometry_columns = select_value("select count(*) from information_schema.tables where table_name = 'geometry_columns'").to_i
-        return {} if geometry_columns == 0
-        constr = select_rows("SELECT * FROM geometry_columns WHERE f_table_name = '#{table_name}'")
-
-        raw_geom_infos = {}
-        constr.each do |geo_col|
-          info = raw_geom_infos[geo_col[3]] ||= PostgresGis::RawGeomInfo.new
-          info.type = geo_col[6]
-          info.srid = geo_col[5].to_i # default SRDI of 0
-          info.dimension = geo_col[4].to_i
-
-          if info.type[6] == ?M #last column is #6. is this looking for the letter M in there?
-            info.with_m = true
-            info.type.chop!
-          else
-            info.with_m = false
-          end
-        end
-
-        raw_geom_infos.each_value do |raw_geom_info|
-          #check the presence of z and m
-          raw_geom_info.convert!
-        end
-
-        raw_geom_infos
-      end
-
     end
   end
 end
-#TODO: revisit
+
 module PostgresGis
-  class RawGeomInfo < Struct.new(:type, :srid, :dimension, :with_z, :with_m, :geographic, :found) #:nodoc:
+  class RawGeomInfo < Struct.new(:type, :srid, :dimension, :with_z, :with_m, :geographic) #:nodoc:
     def convert!
       self.type ||= "geometry"
       self.geographic ||= false
@@ -338,20 +269,12 @@ module PostgresGis
       end
       self
     end
-    #temporary - going away
-    def found?
-      found != false
-    end
-
-    def self.not_found(sql_type, geographic=false)
-      new(sql_type, ActiveRecord::ConnectionAdapters::DEFAULT_SRID, nil, false, false, geographic, false)
-    end
 
     def self.from_sql_type(sql_type)
       if sql_type =~ /(geography|geometry)?(?:\((?:\w+?)(Z)?(M)?(?:,(\d+))?\))?/i
         new(sql_type, $4.to_i, nil, !!$2, !!$3, $1 == 'geography')
-      else
-        not_found(sql_type, sql_type.include?('geography'))
+      else #not found, return a null object
+        new(sql_type, ActiveRecord::ConnectionAdapters::DEFAULT_SRID, nil, false, false, sql_type.include?('geography'))
       end
     end
   end

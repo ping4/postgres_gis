@@ -22,7 +22,7 @@ Bundler::GemHelper.install_tasks
 
 require 'rspec/core/rake_task'
 RSpec::Core::RakeTask.new(:spec) do |t|
-  t.pattern = 'spec/**/*_spec.rb'
+  t.pattern = 'spec/{arel,columns,copied,migrations,schema_dumper}/*_spec.rb'
 end
 
 task :default => :spec

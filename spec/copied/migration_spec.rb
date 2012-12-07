@@ -20,7 +20,7 @@ describe "Spatially-enabled Migrations" do
       @connection.drop_table "migrated_geometry_models"
     end
 
-    SpatialHelper.geometry_data_types.keys.each do |type|
+    (SpatialHelper.geometry_data_types.keys - [:geography]).each do |type|
       it "should create #{type.to_s} columns" do
         ActiveRecord::Schema.define do
           create_table :migrated_geometry_models, :force => true do |t|

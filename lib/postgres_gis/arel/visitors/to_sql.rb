@@ -11,6 +11,8 @@ module Arel
         "'#{value.as_ewkt}'"
       end
       alias :visit_GeoRuby_SimpleFeatures_Point :visit_Gis
+      alias :visit_GeoRuby_SimpleFeatures_Polygon :visit_Gis
+      alias :visit_GeoRuby_SimpleFeatures_MultiPolygon :visit_Gis
 
       # def change_string value
       #   if value.match /"|,|\{/
