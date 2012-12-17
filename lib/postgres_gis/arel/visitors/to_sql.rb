@@ -1,7 +1,7 @@
 require 'arel/visitors/to_sql'
 module Arel
   module Visitors
-    class ToSql
+    class Visitor
       private
       def visit_Arel_Nodes_GisOverlap o
         "st_distance(#{visit o.left},#{visit o.right},0)"

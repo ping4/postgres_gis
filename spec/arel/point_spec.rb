@@ -17,17 +17,15 @@ describe 'Point related AREL functions' do
     Object.send(:remove_const, :Place)
   end
 
-  describe 'quoting IPAddr in sql statement' do
-    it 'properly converts IPAddr to quoted strings when passed as an argument to a where clause' do
+  describe 'converting polygons in sql statement' do
+    it 'properly converts Point to sql format when passed as an argument to a where clause' do
       Place.where(:address => GeometryFactory.point).to_sql.should include("SRID=4326;POINT(1 2)")
     end
   end
 
-  # describe 'cotained with (<<) operator' do
-  #   it 'converts Arel contained_within statemnts to <<' do
-  #     arel_table = IpAddress.arel_table
-
-  #     arel_table.where(arel_table[:address].contained_within(IPAddr.new('127.0.0.1/24'))).to_sql.should match /<< '127.0.0.0\/24'/
-  #   end
-  # end
+  it 'works with count (and other predicates)' do
+    Place.create(address: GeometryFactory.point)
+    arel_table = Place.arel_table
+    Place.where(arel_table[:address].eq(GeometryFactory.point)).count.should eq 1
+  end
 end
