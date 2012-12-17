@@ -1,4 +1,4 @@
-require "bundler/gem_tasks"
+require "bundler/setup"
 begin
   require 'rdoc/task'
 rescue LoadError
