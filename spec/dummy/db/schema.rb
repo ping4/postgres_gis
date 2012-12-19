@@ -17,12 +17,12 @@ add_extension "plpgsql"
 add_extension "postgis"
 add_extension "postgis_topology"
   create_table "geography_point4_models", :force => true do |t|
-    t.string "extra", :srid => 0
+    t.string "extra"
     t.point  "geom",  :srid => 4326, :with_z => true, :with_m => true, :geographic => true
   end
 
   create_table "geography_point_models", :force => true do |t|
-    t.string "extra", :srid => 0
+    t.string "extra"
     t.point  "geom",  :srid => 4326, :geographic => true
   end
 
@@ -30,40 +30,40 @@ add_extension "postgis_topology"
   add_index "geography_point_models", ["geom"], :name => "index_geography_point_models_on_geom", :index_type => :gist
 
   create_table "geography_pointm_models", :force => true do |t|
-    t.string "extra", :srid => 0
+    t.string "extra"
     t.point  "geom",  :srid => 4326, :with_m => true, :geographic => true
   end
 
   create_table "geography_pointz_models", :force => true do |t|
-    t.string "extra", :srid => 0
+    t.string "extra"
     t.point  "geom",  :srid => 4326, :with_z => true, :geographic => true
   end
 
   create_table "geography_polygon_models", :force => true do |t|
-    t.string  "extra", :srid => 0
+    t.string  "extra"
     t.polygon "geom",  :srid => 4326, :geographic => true
   end
 
   create_table "geometry_models", :force => true do |t|
-    t.string   "extra", :srid => 0
+    t.string   "extra"
     t.geometry "geom",  :srid => 4326
   end
 
   create_table "layer", :id => false, :force => true do |t|
-    t.integer "topology_id",                                  :null => false, :srid => 0
-    t.integer "layer_id",                                     :null => false, :srid => 0
-    t.string  "schema_name",    :limit => nil,                :null => false, :srid => 0
-    t.string  "table_name",     :limit => nil,                :null => false, :srid => 0
-    t.string  "feature_column", :limit => nil,                :null => false, :srid => 0
-    t.integer "feature_type",                                 :null => false, :srid => 0
-    t.integer "level",                         :default => 0, :null => false, :srid => 0
-    t.integer "child_id",                                                     :srid => 0
+    t.integer "topology_id",                                  :null => false
+    t.integer "layer_id",                                     :null => false
+    t.string  "schema_name",    :limit => nil,                :null => false
+    t.string  "table_name",     :limit => nil,                :null => false
+    t.string  "feature_column", :limit => nil,                :null => false
+    t.integer "feature_type",                                 :null => false
+    t.integer "level",                         :default => 0, :null => false
+    t.integer "child_id"
   end
 
   add_index "layer", ["schema_name", "table_name", "feature_column"], :name => "layer_schema_name_table_name_feature_column_key", :unique => true
 
   create_table "point4_models", :force => true do |t|
-    t.string "extra", :srid => 0
+    t.string "extra"
     t.point  "geom",  :srid => 4326, :with_z => true, :with_m => true
   end
 
@@ -78,25 +78,25 @@ add_extension "postgis_topology"
   add_index "point_models", ["geom"], :name => "index_point_models_on_geom", :index_type => :gist
 
   create_table "pointm_models", :force => true do |t|
-    t.string "extra", :srid => 0
+    t.string "extra"
     t.point  "geom",  :srid => 4326, :with_m => true
   end
 
   create_table "pointz_models", :force => true do |t|
-    t.string "extra", :srid => 0
+    t.string "extra"
     t.point  "geom",  :srid => 4326, :with_z => true
   end
 
   create_table "polygon_models", :force => true do |t|
-    t.string  "extra", :srid => 0
+    t.string  "extra"
     t.polygon "geom",  :srid => 4326
   end
 
   create_table "topology", :force => true do |t|
-    t.string  "name",      :limit => nil,                    :null => false, :srid => 0
-    t.integer "srid",                                        :null => false, :srid => 0
-    t.float   "precision",                                   :null => false, :srid => 0
-    t.boolean "hasz",                     :default => false, :null => false, :srid => 0
+    t.string  "name",      :limit => nil,                    :null => false
+    t.integer "srid",                                        :null => false
+    t.float   "precision",                                   :null => false
+    t.boolean "hasz",                     :default => false, :null => false
   end
 
   add_index "topology", ["name"], :name => "topology_name_key", :unique => true

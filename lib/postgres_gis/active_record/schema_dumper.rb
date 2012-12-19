@@ -12,7 +12,7 @@ module ActiveRecord
     def column_spec_with_gis(column)
       spec = column_spec_without_gis(column)
       spec[:type]    = column.geometry_type.to_s if column.geometry_type
-      spec[:srid]    = column.srid.inspect if column.srid && column.srid != -1
+      spec[:srid]    = column.srid.inspect if column.srid && column.srid != -1 && column.srid != 0
       spec[:with_z]  = 'true' if column.with_z
       spec[:with_m]  = 'true' if column.with_m
       spec[:geographic] = 'true' if column.geographic?
